@@ -8,6 +8,8 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.middleware.csrf import get_token
 from django.core.exceptions import ValidationError
 from .models import TrustedReference
 
@@ -18,6 +20,12 @@ CASCADE = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface
 
 def index(request):
     return render(request, 'TruthLens_Django/index.html')
+
+
+@ensure_csrf_cookie
+@require_GET
+def csrf_token(request):
+    return JsonResponse({'csrfToken': get_token(request)})
 
 
 def sha256_file(path):

@@ -10,7 +10,19 @@ if os.environ.get('DJANGO_ALLOWED_HOSTS'):
     ALLOWED_HOSTS.extend(host.strip() for host in os.environ['DJANGO_ALLOWED_HOSTS'].split(',') if host.strip())
 if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
     ALLOWED_HOSTS.append(os.environ['RENDER_EXTERNAL_HOSTNAME'])
+CORS_ALLOWED_ORIGINS = [
+    origin.strip().rstrip('/')
+    for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().rstrip('/')
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
     'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
     'analyzer',
@@ -19,6 +31,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -55,12 +68,13 @@ STORAGES = {
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
 }
 if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-    CSRF_TRUSTED_ORIGINS = [f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}"]
+    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}")
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 3600
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'None'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATA_DIR = BASE_DIR / 'data'
 DATA_DIR.mkdir(exist_ok=True)

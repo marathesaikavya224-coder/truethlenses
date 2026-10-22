@@ -1,6 +1,6 @@
 # TruthLens Django Prototype (Image + Video)
 
-This is a Django version of the TruthLens browser prototype.
+TruthLens is a Django analysis API and a static browser dashboard. Deploy the dashboard to Vercel and keep the Django/OpenCV backend on Render.
 
 ## Features
 - Professional browser dashboard.
@@ -42,13 +42,23 @@ Then visit http://127.0.0.1:8000/admin
 
 ## Deploy to Render
 
-1. Push this project to GitHub and create a new Blueprint on Render using the repository.
-2. Render reads `render.yaml` to create the web service and PostgreSQL database. The web service installs dependencies, collects static files, applies database migrations, and starts Gunicorn.
-3. Wait for the first deploy to finish, then open the service URL shown in the Render dashboard.
+1. Create a Blueprint on Render using this GitHub repository. Render reads `render.yaml` to create the Django web service and PostgreSQL database.
+2. The web service installs dependencies, collects static files, applies database migrations, and starts Gunicorn. Save the backend URL shown in the Render dashboard.
 
 The Blueprint uses Render's free plans where available; free PostgreSQL databases are temporary and have limited storage. Choose a paid database plan for persistent production data. The site is public and currently has no user authentication or rate limiting; do not use it for sensitive uploads or treat it as a production forensic service.
 
 For local deployments, `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, and `DATABASE_URL` are optional. Set a unique secret key and turn debug off for any public deployment.
+
+## Deploy the dashboard to Vercel
+
+The Django/OpenCV backend stays on Render; Vercel serves only the static dashboard. Do not deploy the Django project root as a Vercel application.
+
+1. Deploy the Render Blueprint first and copy its HTTPS service URL.
+2. Import this repository in Vercel and set the **Root Directory** to `frontend`. Use the **Other** framework preset and leave the build command blank.
+3. In `frontend/config.js`, set `TRUTHLENS_API_BASE_URL` to the Render service URL (for example, `https://your-service.onrender.com`), without a trailing slash, and push the change.
+4. Copy the final Vercel origin (for example, `https://your-project.vercel.app`) into both Render environment variables `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS`. Include the `https://` scheme and no path, then redeploy the backend.
+
+The frontend and backend use credentialed cross-origin requests and Django CSRF protection. Keep the CORS origin restricted to your actual Vercel site; do not use `*`. Vercel hosts only the static UI: uploads and analysis still run on Render and are subject to that service's request and runtime limits.
 
 ## Demo
 Register a trusted original image/video, then analyze the exact same file. Its hash should match. Edit or re-encode a copy and analyze it; its hash should normally differ. A mismatch means the bytes differ from the registered file, not that the content is fake.
